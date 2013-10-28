@@ -2,4 +2,62 @@
 
 require "dns"
 
-main ARGV
+
+if ARGV.empty?
+  get_dns
+  exit
+end
+
+case ARGV.first
+
+when 'list'
+  res = `networksetup -listallnetworkservices`
+  res_copy = res.dup
+  res_copy.prepend "# Network Services:\n"
+  res_copy = res_copy.split("\n").map.with_index do |name, index|
+    if index > 1
+      "- #{name}"
+    else
+      name
+    end
+  end.join("\n")
+  puts res_copy
+
+when 'flush'
+  flush_dns
+
+when 'default'
+  set_dns
+when *dns_list.keys
+  set_dns(dns: dns_list[ARGV.first])
+
+when 'get'
+  case ARGV[1]
+  when nil
+    get_dns
+  when 'all'
+    res = `networksetup -listallnetworkservices`
+    services = res.split("\n")
+    services.delete_at(0) # remove this line 'An asterisk (*) denotes that a network service is disabled.'
+    puts "# Network Services DNS:"
+    services.each do |service|
+      get_dns(service)
+    end
+  end
+
+when 'set'
+  res = `networksetup -listallnetworkservices`.split("\n")
+  res.delete_at(0)
+  puts res.map.with_index { |e, i| i.to_s + '. ' + e }
+
+  puts "Input the number of service you want to set:"
+  name = res[$stdin.gets.chomp.to_i]
+
+  puts "Input the DNS, multiple DNS separated by commas"
+  dns = $stdin.gets.chomp.split(',')
+
+  set_dns(name: name, dns: dns)
+
+else
+  usage
+end

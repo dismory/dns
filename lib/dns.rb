@@ -1,52 +1,5 @@
-def main(argv)
-  if argv.empty?
-    get_dns
-    exit
-  end
+require "yaml"
 
-  case argv.first
-
-  when 'list'
-    res = `networksetup -listallnetworkservices`
-    res_copy = res.dup
-    res_copy.prepend "# Network Services:\n"
-    res_copy = res_copy.split("\n").map.with_index do |name, index|
-      if index > 1
-        "- #{name}"
-      else
-        name
-      end
-    end.join("\n")
-    puts res_copy
-
-  when 'flush'
-    flush_dns
-
-  when 'default'
-    set_dns
-  when 'google'
-    set_dns(dns: '8.8.8.8')
-  when 'opendns'
-    set_dns(dns: ['208.67.222.222', '208.67.220.220'])
-
-  when 'get'
-    case argv[1]
-    when nil
-      get_dns
-    when 'all'
-      res = `networksetup -listallnetworkservices`
-      services = res.split("\n")
-      services.delete_at(0) # remove this line 'An asterisk (*) denotes that a network service is disabled.'
-      puts "# Network Services DNS:"
-      services.each do |service|
-        get_dns(service)
-      end
-    end
-
-  else
-    usage
-  end
-end
 
 def get_dns(name = 'Wi-Fi')
   puts "- #{name} DNS:"
@@ -75,9 +28,9 @@ def set_dns(options = {})
 
   cmd = 'networksetup', '-setdnsservers', options[:name]
   cmd += options[:dns]
-  system cmd.join(' ')
+  ret = system cmd.join(' ')
 
-  puts "Set #{options[:name]} DNS to #{options[:dns].join(', ')} successfully!"
+  puts "Set #{options[:name]} DNS to #{options[:dns].join(', ')} successfully!" if ret
 end
 
 def flush_dns
@@ -88,15 +41,22 @@ def usage
   puts <<-USAGE
   - dns         :show Wi-Fi DNS servers
 
+  - dns defalut :remove Wi-Fi DNS servers(reset it to default)
+  - dns opendns :set Wi-Fi DNS servers to OpenDNS(208.67.222.222, 208.67.220.220)
+  - dns google  :set Wi-Fi DNS servers to Google(8.8.8.8)
+  - dns v2ex    :set Wi-Fi DNS servers to V2EX(199.91.73.222, 178.79.131.110)
+
+  - dns set     :set DNS servers
+
   - dns list    :show all network services
 
   - dns get     :show Wi-Fi DNS servers
   - dns get all :show all DNS servers
 
-  - dns defalut :remove Wi-Fi DNS servers
-  - dns opendns :set Wi-Fi DNS servers to OpenDNS(208.67.222.222, 208.67.220.220)
-  - dns google  :set Wi-Fi DNS servers to Google(8.8.8.8)
-
   - dns flush   :flush DNS cache
   USAGE
+end
+
+def dns_list
+  YAML.load(File.read(File.expand_path('../dns.yml', __FILE__)))
 end
