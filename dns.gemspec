@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.platform    = Gem::Platform.new(['x86_64', 'darwin']) # at least Mountain Lion
   s.name        = 'dns'
-  s.version     = '0.0.4'
+  s.version     = '0.0.5'
   s.date        = '2013-10-26'
   s.summary     = "A gem for configuring DNS on OS X"
   s.description = "A gem for configuring DNS on OS X"
@@ -15,6 +15,6 @@ Gem::Specification.new do |s|
   s.email       = 'dismory@gmail.com'
   s.homepage    = 'https://github.com/dismory/dns'
 
-  s.files       = ["lib/dns.rb"]
+  s.files       = Dir['lib/**']
   s.executables << 'dns'
 end
